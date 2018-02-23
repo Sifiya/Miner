@@ -1,0 +1,192 @@
+.miner {
+  border: 2px solid #fff;
+  border-style: outset;
+  display: inline-block;
+  background-color: #C0C0C0;
+  padding: 6px;
+  min-width: 140px;
+  min-height: 10px;
+}
+
+.miner-head {
+  position: relative;
+  background-color: #C0C0C0;
+  height: 26px;
+  padding: 3px;
+  margin-bottom: 6px;
+}
+
+.miner-head,
+.miner-field {
+  border: 2px solid #fff;
+  border-style: inset;
+}
+
+.miner-head-timer,
+.miner-head-counter {
+  font-size: 0px;
+  position: absolute;
+  content: "";
+  top: 4px;
+}
+
+.miner-head-counter {
+  left: 6px;
+}
+
+.miner-head-timer {
+  right: 6px;
+}
+
+.miner-head .num-0 {
+  background-position: 0 0;
+}
+
+.miner-head .num-1 {
+  background-position: -13px 0px;
+}
+
+.miner-head .num-2 {
+  background-position: -26px 0px;
+}
+
+.miner-head .num-3 {
+  background-position: -39px 0px;
+}
+
+.miner-head .num-4 {
+  background-position: -52px 0px;
+}
+
+.miner-head .num-5 {
+  background-position: -65px 0px;
+}
+
+.miner-head .num-6 {
+  background-position: -78px 0px;
+}
+
+.miner-head .num-7 {
+  background-position: -91px 0px;
+}
+
+.miner-head .num-8 {
+  background-position: -104px 0px;
+}
+
+.miner-head .num-9 {
+  background-position: -117px 0px;
+}
+
+.miner-head-timer-num,
+.miner-head-counter-num {
+  display:inline-block;
+  width: 13px;
+  height: 23px;
+  background: url("img/sprite100.gif") no-repeat;
+}
+
+.miner-head-smile {
+  display: block;
+  margin: 0 auto;
+  width: 26px;
+  height: 26px;
+  background: url("img/sprite100.gif") no-repeat 0px -55px;
+}
+
+.miner-head-smile.winner {
+  background-position: -104px -55px;
+}
+
+.miner-head-smile.dead {
+  background-position: -78px -55px;
+}
+
+.miner-head-smile.opening {
+  background-position: -52px -55px;
+}
+
+.miner-head-smile.clicked {
+  background-position: -26px -55px;
+}
+
+.miner-field {
+  display: table;
+}
+
+.miner-field-row {
+  display: table-row;
+  margin: 0;
+  list-style: none;
+}
+
+.miner-field-cell {
+  display: table-cell;
+  width: 16px;
+  height: 16px;
+  background: url("img/sprite100.gif") no-repeat;
+}
+
+.miner-field-cell.cell-closed {
+  background-position: 0px -39px;
+}
+
+.miner-field-cell.cell-1 {
+  background-position: -16px -23px;
+}
+
+.miner-field-cell.cell-2 {
+  background-position: -32px -23px;
+}
+
+.miner-field-cell.cell-3 {
+  background-position: -48px -23px;
+}
+
+.miner-field-cell.cell-4 {
+  background-position: -64px -23px;
+}
+
+.miner-field-cell.cell-5 {
+  background-position: -80px -23px;
+}
+
+.miner-field-cell.cell-6 {
+  background-position: -96px -23px;
+}
+
+.miner-field-cell.cell-7 {
+  background-position: -112px -23px;
+}
+
+.miner-field-cell.cell-8 {
+  background-position: -128px -23px;
+}
+
+.miner-field-cell.cell-0 {
+  background-position: 0px -23px;
+}
+
+.miner-field-cell.cell-flag {
+  background-position: -16px -39px;
+}
+
+.miner-field-cell.cell-b-boom{
+  background-position: -32px -39px;
+}
+
+.miner-field-cell.cell-b{
+  background-position: -64px -39px;
+}
+
+.miner-field-cell.cell-b-wrong{
+  background-position: -48px -39px;
+}
+
+.miner-field-cell.cell-q{
+  background-position: -80px -39px;
+}
+
+.miner-field-cell.cell-q-clicked{
+  background-position: -96px -39px;
+}

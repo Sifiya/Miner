@@ -1,0 +1,25 @@
+{
+  "name": "miner",
+  "version": "1.0.0",
+  "description": "browser minigame",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "./node_modules/.bin/webpack"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sifiya/Miner.git"
+  },
+  "author": "Grynko Tatyana",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Sifiya/Miner/issues"
+  },
+  "homepage": "https://github.com/Sifiya/Miner#readme",
+  "devDependencies": {
+    "handlebars": "^4.0.11",
+    "handlebars-loader": "^1.6.0",
+    "webpack": "^3.11.0"
+  }
+}
