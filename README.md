@@ -1,0 +1,2 @@
+# Miner
+Fully prepared app
