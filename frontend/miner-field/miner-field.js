@@ -10,6 +10,28 @@ export default class MinerField {
     this._compiledTemplate =  require('./template.hbs');
 
     this._render();
+
+    document.addEventListener('refreshField', this._render.bind(this));
+
+    this._el.addEventListener('mousedown', this._onCellMouseDown.bind(this) );
+    document.addEventListener('mouseup', this._onCellMouseUp.bind(this) );
+  }
+
+  _onCellMouseDown(e) {
+    //ПРОБЛЕМКА С ВИЗУАЛИЗАЦИЕЙ РЕШИТЬ
+    this._mouseIsDown = true;
+    this._clickedCell = e.target;
+    if (!this._clickedCell.classList.contains("miner-field-cell")) return;
+
+    this._clickedCell.classList.remove("cell-closed");
+    this._clickedCell.classList.add("cell-0");
+    e.preventDefault();
+  }
+
+  _onCellMouseUp(e) {
+    if (!this._mouseIsDown) return;
+    this._clickedCell.classList.remove("cell-0");
+    this._clickedCell.classList.add("cell-closed");
   }
 
   _render() {

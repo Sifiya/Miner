@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 3);
+/******/ 	return __webpack_require__(__webpack_require__.s = 4);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -259,6 +259,15 @@ module.exports = exports['default'];
 /* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
+// Create a simple path alias to allow browserify to resolve
+// the runtime on a supported path.
+module.exports = __webpack_require__(8)['default'];
+
+
+/***/ }),
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
 "use strict";
 
 
@@ -367,12 +376,12 @@ exports.logger = _logger2['default'];
 
 
 /***/ }),
-/* 3 */
+/* 4 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__miner_miner__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__miner_miner__ = __webpack_require__(5);
 
 
 
@@ -386,11 +395,11 @@ let miner = new __WEBPACK_IMPORTED_MODULE_0__miner_miner__["a" /* default */]({
 
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__miner_field_miner_field__ = __webpack_require__(5);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__miner_field_miner_field__ = __webpack_require__(6);
 
 
 
@@ -399,7 +408,7 @@ class MinerGame {
   constructor(options) {
     this._el = options.el;
 
-    this._compiledTemplate = __webpack_require__(6);
+    this._compiledTemplate = __webpack_require__(24);
 
     this._render();
 
@@ -409,10 +418,38 @@ class MinerGame {
       height: options.height,
       bombs: options.bombs
     });
+
+    this._smileButton = this._el.querySelector(".miner-head-smile");
+
+    //Я не знаю, как тут реализовать так, чтобы родитель и ребенок "не знали" друг про друга
+    this._smileButton.addEventListener('click', this._initiateCreatingNewField.bind(this) );
+
+    this._smileButton.addEventListener('mousedown', this._smileButtonMouseDown.bind(this));
+    document.addEventListener('mouseup', this._smileButtonMouseUp.bind(this));
+  }
+
+  _smileButtonMouseDown(e) {
+    this._smileButton.className = "miner-head-smile";
+    this._smileButton.classList.add("clicked");
+    this._smileMouseIsDown = true;
+    e.preventDefault();
+  }
+
+  _smileButtonMouseUp(e) {
+    if (!this._smileMouseIsDown) {
+      return;
+    }
+    this._smileButton.className = "miner-head-smile";
+    this._smileMouseIsDown = false;
   }
 
   _render() {
     this._el.innerHTML = this._compiledTemplate();
+  }
+
+  _initiateCreatingNewField(e) {
+    let newEvent = new CustomEvent('refreshField', { bubbles: true });
+    this._el.dispatchEvent(newEvent);
   }
 }
 /* harmony export (immutable) */ __webpack_exports__["a"] = MinerGame;
@@ -420,7 +457,7 @@ class MinerGame {
 
 
 /***/ }),
-/* 5 */
+/* 6 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -433,9 +470,31 @@ class MinerField {
     this._height = options.height;
     this._bombs = options.bombs;
 
-    this._compiledTemplate =  __webpack_require__(24);
+    this._compiledTemplate =  __webpack_require__(7);
 
     this._render();
+
+    document.addEventListener('refreshField', this._render.bind(this));
+
+    this._el.addEventListener('mousedown', this._onCellMouseDown.bind(this) );
+    document.addEventListener('mouseup', this._onCellMouseUp.bind(this) );
+  }
+
+  _onCellMouseDown(e) {
+    //ПРОБЛЕМКА С ВИЗУАЛИЗАЦИЕЙ РЕШИТЬ
+    this._mouseIsDown = true;
+    this._clickedCell = e.target;
+    if (!this._clickedCell.classList.contains("miner-field-cell")) return;
+
+    this._clickedCell.classList.remove("cell-closed");
+    this._clickedCell.classList.add("cell-0");
+    e.preventDefault();
+  }
+
+  _onCellMouseUp(e) {
+    if (!this._mouseIsDown) return;
+    this._clickedCell.classList.remove("cell-0");
+    this._clickedCell.classList.add("cell-closed");
   }
 
   _render() {
@@ -514,23 +573,28 @@ class MinerField {
 
 
 /***/ }),
-/* 6 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var Handlebars = __webpack_require__(7);
-function __default(obj) { return obj && (obj.__esModule ? obj["default"] : obj); }
-module.exports = (Handlebars["default"] || Handlebars).template({"compiler":[7,">= 4.0.0"],"main":function(container,depth0,helpers,partials,data) {
-    return "<header class=\"miner-head\">\r\n    <div class=\"miner-head-counter\">\r\n      <div class=\"miner-head-counter-num num-0\"></div>\r\n      <div class=\"miner-head-counter-num num-9\"></div>\r\n      <div class=\"miner-head-counter-num num-9\"></div>\r\n    </div>\r\n\r\n    <div class=\"miner-head-smile\"></div>\r\n\r\n    <div class=\"miner-head-timer\">\r\n      <div class=\"miner-head-timer-num num-0\"></div>\r\n      <div class=\"miner-head-timer-num num-0\"></div>\r\n      <div class=\"miner-head-timer-num num-0\"></div>\r\n    </div>\r\n  </header>\r\n\r\n  <section class=\"miner-field\">\r\n  </section>\r\n";
-},"useData":true});
-
-/***/ }),
 /* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
-// Create a simple path alias to allow browserify to resolve
-// the runtime on a supported path.
-module.exports = __webpack_require__(8)['default'];
+var Handlebars = __webpack_require__(2);
+function __default(obj) { return obj && (obj.__esModule ? obj["default"] : obj); }
+module.exports = (Handlebars["default"] || Handlebars).template({"1":function(container,depth0,helpers,partials,data,blockParams) {
+    var stack1;
 
+  return "<ul class=\"miner-field-row\">\r\n"
+    + ((stack1 = helpers.each.call(depth0 != null ? depth0 : (container.nullContext || {}),blockParams[0][0],{"name":"each","hash":{},"fn":container.program(2, data, 1, blockParams),"inverse":container.noop,"data":data,"blockParams":blockParams})) != null ? stack1 : "")
+    + "</ul>\r\n";
+},"2":function(container,depth0,helpers,partials,data) {
+    var helper;
+
+  return "  <li class=\"miner-field-cell cell-closed\" data-content=\"cell-"
+    + container.escapeExpression(((helper = (helper = helpers.value || (depth0 != null ? depth0.value : depth0)) != null ? helper : helpers.helperMissing),(typeof helper === "function" ? helper.call(depth0 != null ? depth0 : (container.nullContext || {}),{"name":"value","hash":{},"data":data}) : helper)))
+    + "\"></li>\r\n";
+},"compiler":[7,">= 4.0.0"],"main":function(container,depth0,helpers,partials,data,blockParams) {
+    var stack1;
+
+  return ((stack1 = helpers.each.call(depth0 != null ? depth0 : (container.nullContext || {}),(depth0 != null ? depth0.field : depth0),{"name":"each","hash":{},"fn":container.program(1, data, 1, blockParams),"inverse":container.noop,"data":data,"blockParams":blockParams})) != null ? stack1 : "");
+},"useData":true,"useBlockParams":true});
 
 /***/ }),
 /* 8 */
@@ -548,7 +612,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'd
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj['default'] = obj; return newObj; } }
 
-var _handlebarsBase = __webpack_require__(2);
+var _handlebarsBase = __webpack_require__(3);
 
 var base = _interopRequireWildcard(_handlebarsBase);
 
@@ -1130,7 +1194,7 @@ var _exception = __webpack_require__(1);
 
 var _exception2 = _interopRequireDefault(_exception);
 
-var _base = __webpack_require__(2);
+var _base = __webpack_require__(3);
 
 function checkRevision(compilerInfo) {
   var compilerRevision = compilerInfo && compilerInfo[0] || 1,
@@ -1473,25 +1537,11 @@ module.exports = g;
 /* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var Handlebars = __webpack_require__(7);
+var Handlebars = __webpack_require__(2);
 function __default(obj) { return obj && (obj.__esModule ? obj["default"] : obj); }
-module.exports = (Handlebars["default"] || Handlebars).template({"1":function(container,depth0,helpers,partials,data,blockParams) {
-    var stack1;
-
-  return "<ul class=\"miner-field-row\">\r\n"
-    + ((stack1 = helpers.each.call(depth0 != null ? depth0 : (container.nullContext || {}),blockParams[0][0],{"name":"each","hash":{},"fn":container.program(2, data, 1, blockParams),"inverse":container.noop,"data":data,"blockParams":blockParams})) != null ? stack1 : "")
-    + "</ul>\r\n";
-},"2":function(container,depth0,helpers,partials,data) {
-    var helper;
-
-  return "  <li class=\"miner-field-cell cell-"
-    + container.escapeExpression(((helper = (helper = helpers.value || (depth0 != null ? depth0.value : depth0)) != null ? helper : helpers.helperMissing),(typeof helper === "function" ? helper.call(depth0 != null ? depth0 : (container.nullContext || {}),{"name":"value","hash":{},"data":data}) : helper)))
-    + "\"></li>\r\n";
-},"compiler":[7,">= 4.0.0"],"main":function(container,depth0,helpers,partials,data,blockParams) {
-    var stack1;
-
-  return ((stack1 = helpers.each.call(depth0 != null ? depth0 : (container.nullContext || {}),(depth0 != null ? depth0.field : depth0),{"name":"each","hash":{},"fn":container.program(1, data, 1, blockParams),"inverse":container.noop,"data":data,"blockParams":blockParams})) != null ? stack1 : "");
-},"useData":true,"useBlockParams":true});
+module.exports = (Handlebars["default"] || Handlebars).template({"compiler":[7,">= 4.0.0"],"main":function(container,depth0,helpers,partials,data) {
+    return "<header class=\"miner-head\">\r\n    <div class=\"miner-head-counter\">\r\n      <div class=\"miner-head-counter-num num-0\"></div>\r\n      <div class=\"miner-head-counter-num num-9\"></div>\r\n      <div class=\"miner-head-counter-num num-9\"></div>\r\n    </div>\r\n\r\n    <div class=\"miner-head-smile\"></div>\r\n\r\n    <div class=\"miner-head-timer\">\r\n      <div class=\"miner-head-timer-num num-0\"></div>\r\n      <div class=\"miner-head-timer-num num-0\"></div>\r\n      <div class=\"miner-head-timer-num num-0\"></div>\r\n    </div>\r\n  </header>\r\n\r\n  <section class=\"miner-field\">\r\n  </section>\r\n";
+},"useData":true});
 
 /***/ })
 /******/ ]);
