@@ -1,8 +1,8 @@
 'use strict';
 
-import VisualComponent  from '../visual-component/visual-component';
+import Component from '../component/component';
 
-export default class MinerField extends VisualComponent {
+export default class MinerField extends Component {
   constructor(options) {
     super();
 
@@ -31,6 +31,8 @@ export default class MinerField extends VisualComponent {
     if (e.button !== 0) return;
 
     this._mouseIsDown = true;
+    this.trigger('cellMouseDown', true);
+
     this._clickedCell = e.target;
     if (!this._clickedCell.classList.contains("miner-field-cell")) return;
     if (!this._clickedCell.classList.contains("cell-closed")) return;
@@ -58,6 +60,7 @@ export default class MinerField extends VisualComponent {
   _onCellMouseUp(e) {
     if (!this._mouseIsDown) return;
     this._mouseIsDown = false;
+    this.trigger('cellMouseUp', true);
 
     if (e.target === this._clickedCell) {
       this._openCell(this._clickedCell);

@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 4);
+/******/ 	return __webpack_require__(__webpack_require__.s = 5);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -257,6 +257,30 @@ module.exports = exports['default'];
 
 /***/ }),
 /* 2 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+
+
+class Component {
+  setClass(elem, basicCls, addCls) {
+    elem.className = basicCls;
+    elem.classList.add(addCls);
+  }
+
+  trigger(name, bubbles = false) {
+    let newEvent = new CustomEvent(name, {
+      bubbles: bubbles
+    });
+    this._el.dispatchEvent(newEvent);
+  }
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = Component;
+
+
+
+/***/ }),
+/* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // Create a simple path alias to allow browserify to resolve
@@ -265,7 +289,7 @@ module.exports = __webpack_require__(9)['default'];
 
 
 /***/ }),
-/* 3 */
+/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -376,12 +400,12 @@ exports.logger = _logger2['default'];
 
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__miner_miner__ = __webpack_require__(5);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__miner_miner__ = __webpack_require__(6);
 
 
 
@@ -395,24 +419,27 @@ let miner = new __WEBPACK_IMPORTED_MODULE_0__miner_miner__["a" /* default */]({
 
 
 /***/ }),
-/* 5 */
+/* 6 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__miner_field_miner_field__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__component_component__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__miner_field_miner_field__ = __webpack_require__(7);
 
 
 
 
-class MinerGame {
+
+class MinerGame extends __WEBPACK_IMPORTED_MODULE_0__component_component__["a" /* default */] {
   constructor(options) {
+    super();
     this._el = options.el;
 
     this._compiledTemplate = __webpack_require__(25);
 
     this._render();
 
-    this._minerField = new __WEBPACK_IMPORTED_MODULE_0__miner_field_miner_field__["a" /* default */]({
+    this._minerField = new __WEBPACK_IMPORTED_MODULE_1__miner_field_miner_field__["a" /* default */]({
       el: this._el.querySelector(".miner-field"),
       width: options.width,
       height: options.height,
@@ -421,8 +448,9 @@ class MinerGame {
 
     this._smileButton = this._el.querySelector(".miner-head-smile");
 
-    //Я не знаю, как тут реализовать так, чтобы родитель и ребенок "не знали" друг про друга
     this._smileButton.addEventListener('click', this._initiateCreatingNewField.bind(this) );
+    this._el.addEventListener('cellMouseDown', this._smileSetWowFace.bind(this) );
+    this._el.addEventListener('cellMouseUp', this._smileRemoveWowFace.bind(this) );
 
     this._smileButton.addEventListener('mousedown', this._smileButtonMouseDown.bind(this));
     document.addEventListener('mouseup', this._smileButtonMouseUp.bind(this));
@@ -447,9 +475,16 @@ class MinerGame {
     this._el.innerHTML = this._compiledTemplate();
   }
 
-  _initiateCreatingNewField(e) {
-    let newEvent = new CustomEvent('refreshField', { bubbles: true });
-    this._el.dispatchEvent(newEvent);
+  _initiateCreatingNewField() {
+    this.trigger('refreshField', true);
+  }
+
+  _smileSetWowFace() {
+    this._smileButton.classList.add("opening");
+  }
+
+  _smileRemoveWowFace() {
+    this._smileButton.className = "miner-head-smile";
   }
 }
 /* harmony export (immutable) */ __webpack_exports__["a"] = MinerGame;
@@ -457,16 +492,16 @@ class MinerGame {
 
 
 /***/ }),
-/* 6 */
+/* 7 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__visual_component_visual_component__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__component_component__ = __webpack_require__(2);
 
 
 
 
-class MinerField extends __WEBPACK_IMPORTED_MODULE_0__visual_component_visual_component__["a" /* default */] {
+class MinerField extends __WEBPACK_IMPORTED_MODULE_0__component_component__["a" /* default */] {
   constructor(options) {
     super();
 
@@ -495,6 +530,8 @@ class MinerField extends __WEBPACK_IMPORTED_MODULE_0__visual_component_visual_co
     if (e.button !== 0) return;
 
     this._mouseIsDown = true;
+    this.trigger('cellMouseDown', true);
+
     this._clickedCell = e.target;
     if (!this._clickedCell.classList.contains("miner-field-cell")) return;
     if (!this._clickedCell.classList.contains("cell-closed")) return;
@@ -522,6 +559,7 @@ class MinerField extends __WEBPACK_IMPORTED_MODULE_0__visual_component_visual_co
   _onCellMouseUp(e) {
     if (!this._mouseIsDown) return;
     this._mouseIsDown = false;
+    this.trigger('cellMouseUp', true);
 
     if (e.target === this._clickedCell) {
       this._openCell(this._clickedCell);
@@ -682,27 +720,10 @@ class MinerField extends __WEBPACK_IMPORTED_MODULE_0__visual_component_visual_co
 
 
 /***/ }),
-/* 7 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-
-
-class VisualComponent {
-  setClass(elem, basicCls, addCls) {
-    elem.className = basicCls;
-    elem.classList.add(addCls);
-  }
-}
-/* harmony export (immutable) */ __webpack_exports__["a"] = VisualComponent;
-
-
-
-/***/ }),
 /* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var Handlebars = __webpack_require__(2);
+var Handlebars = __webpack_require__(3);
 function __default(obj) { return obj && (obj.__esModule ? obj["default"] : obj); }
 module.exports = (Handlebars["default"] || Handlebars).template({"1":function(container,depth0,helpers,partials,data,blockParams) {
     var stack1;
@@ -740,7 +761,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'd
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj['default'] = obj; return newObj; } }
 
-var _handlebarsBase = __webpack_require__(3);
+var _handlebarsBase = __webpack_require__(4);
 
 var base = _interopRequireWildcard(_handlebarsBase);
 
@@ -1322,7 +1343,7 @@ var _exception = __webpack_require__(1);
 
 var _exception2 = _interopRequireDefault(_exception);
 
-var _base = __webpack_require__(3);
+var _base = __webpack_require__(4);
 
 function checkRevision(compilerInfo) {
   var compilerRevision = compilerInfo && compilerInfo[0] || 1,
@@ -1665,7 +1686,7 @@ module.exports = g;
 /* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var Handlebars = __webpack_require__(2);
+var Handlebars = __webpack_require__(3);
 function __default(obj) { return obj && (obj.__esModule ? obj["default"] : obj); }
 module.exports = (Handlebars["default"] || Handlebars).template({"compiler":[7,">= 4.0.0"],"main":function(container,depth0,helpers,partials,data) {
     return "<header class=\"miner-head\">\r\n    <div class=\"miner-head-counter\">\r\n      <div class=\"miner-head-counter-num num-0\"></div>\r\n      <div class=\"miner-head-counter-num num-9\"></div>\r\n      <div class=\"miner-head-counter-num num-9\"></div>\r\n    </div>\r\n\r\n    <div class=\"miner-head-smile\"></div>\r\n\r\n    <div class=\"miner-head-timer\">\r\n      <div class=\"miner-head-timer-num num-0\"></div>\r\n      <div class=\"miner-head-timer-num num-0\"></div>\r\n      <div class=\"miner-head-timer-num num-0\"></div>\r\n    </div>\r\n  </header>\r\n\r\n  <section class=\"miner-field\">\r\n  </section>\r\n";

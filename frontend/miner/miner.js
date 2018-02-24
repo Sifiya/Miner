@@ -1,9 +1,11 @@
 'use strict';
 
+import Component from '../component/component';
 import MinerField from '../miner-field/miner-field';
 
-export default class MinerGame {
+export default class MinerGame extends Component {
   constructor(options) {
+    super();
     this._el = options.el;
 
     this._compiledTemplate = require('./template.hbs');
@@ -19,8 +21,9 @@ export default class MinerGame {
 
     this._smileButton = this._el.querySelector(".miner-head-smile");
 
-    //Я не знаю, как тут реализовать так, чтобы родитель и ребенок "не знали" друг про друга
     this._smileButton.addEventListener('click', this._initiateCreatingNewField.bind(this) );
+    this._el.addEventListener('cellMouseDown', this._smileSetWowFace.bind(this) );
+    this._el.addEventListener('cellMouseUp', this._smileRemoveWowFace.bind(this) );
 
     this._smileButton.addEventListener('mousedown', this._smileButtonMouseDown.bind(this));
     document.addEventListener('mouseup', this._smileButtonMouseUp.bind(this));
@@ -45,8 +48,15 @@ export default class MinerGame {
     this._el.innerHTML = this._compiledTemplate();
   }
 
-  _initiateCreatingNewField(e) {
-    let newEvent = new CustomEvent('refreshField', { bubbles: true });
-    this._el.dispatchEvent(newEvent);
+  _initiateCreatingNewField() {
+    this.trigger('refreshField', true);
+  }
+
+  _smileSetWowFace() {
+    this._smileButton.classList.add("opening");
+  }
+
+  _smileRemoveWowFace() {
+    this._smileButton.className = "miner-head-smile";
   }
 }
