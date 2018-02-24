@@ -1,7 +1,7 @@
 {{#each field as |row|}}
 <ul class="miner-field-row">
   {{#each row as |cell|}}
-  <li class="miner-field-cell cell-closed" data-content="cell-{{value}}"></li>
+  <li class="miner-field-cell cell-closed" data-content="cell-{{value}}" data-coords="{{coords}}"></li>
   {{/each}}
 </ul>
 {{/each}}

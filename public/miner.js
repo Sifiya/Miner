@@ -261,7 +261,7 @@ module.exports = exports['default'];
 
 // Create a simple path alias to allow browserify to resolve
 // the runtime on a supported path.
-module.exports = __webpack_require__(8)['default'];
+module.exports = __webpack_require__(9)['default'];
 
 
 /***/ }),
@@ -283,11 +283,11 @@ var _exception = __webpack_require__(1);
 
 var _exception2 = _interopRequireDefault(_exception);
 
-var _helpers = __webpack_require__(9);
+var _helpers = __webpack_require__(10);
 
-var _decorators = __webpack_require__(17);
+var _decorators = __webpack_require__(18);
 
-var _logger = __webpack_require__(19);
+var _logger = __webpack_require__(20);
 
 var _logger2 = _interopRequireDefault(_logger);
 
@@ -408,7 +408,7 @@ class MinerGame {
   constructor(options) {
     this._el = options.el;
 
-    this._compiledTemplate = __webpack_require__(24);
+    this._compiledTemplate = __webpack_require__(25);
 
     this._render();
 
@@ -461,47 +461,136 @@ class MinerGame {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__visual_component_visual_component__ = __webpack_require__(7);
 
 
-class MinerField {
+
+
+class MinerField extends __WEBPACK_IMPORTED_MODULE_0__visual_component_visual_component__["a" /* default */] {
   constructor(options) {
+    super();
+
     this._el = options.el;
     this._width = options.width;
     this._height = options.height;
     this._bombs = options.bombs;
 
-    this._compiledTemplate =  __webpack_require__(7);
+    this._compiledTemplate =  __webpack_require__(8);
+
+    this._onCellMouseDown = this._onCellMouseDown.bind(this);
+    this._onCellMouseUp = this._onCellMouseUp.bind(this);
+    this._onCellMouseOver = this._onCellMouseOver.bind(this);
+    this._onCellMouseOut = this._onCellMouseOut.bind(this);
+    this._render = this._render.bind(this);
 
     this._render();
 
-    document.addEventListener('refreshField', this._render.bind(this));
-
-    this._el.addEventListener('mousedown', this._onCellMouseDown.bind(this) );
-    document.addEventListener('mouseup', this._onCellMouseUp.bind(this) );
+    document.addEventListener('refreshField', this._render);
   }
 
+  //Визуальные решения
   _onCellMouseDown(e) {
-    //ПРОБЛЕМКА С ВИЗУАЛИЗАЦИЕЙ РЕШИТЬ
+    e.preventDefault();
+
     this._mouseIsDown = true;
     this._clickedCell = e.target;
     if (!this._clickedCell.classList.contains("miner-field-cell")) return;
 
-    this._clickedCell.classList.remove("cell-closed");
-    this._clickedCell.classList.add("cell-0");
-    e.preventDefault();
+    this.setClass(this._clickedCell, "miner-field-cell", "cell-0");
   }
 
+  _onCellMouseOver(e) {
+    this._clickedCell = e.target;
+    if (!this._clickedCell.classList.contains("miner-field-cell")) return;
+    if (!this._mouseIsDown) return;
+
+    this.setClass(this._clickedCell, "miner-field-cell", "cell-0");
+  }
+
+  _onCellMouseOut(e) {
+    let cell = e.target;
+    if (!cell.classList.contains("miner-field-cell")) return;
+    if (!this._mouseIsDown) return;
+
+    this.setClass(cell, "miner-field-cell", "cell-closed");
+  }
+
+  //Для визуала + открытия ячейки
   _onCellMouseUp(e) {
     if (!this._mouseIsDown) return;
-    this._clickedCell.classList.remove("cell-0");
-    this._clickedCell.classList.add("cell-closed");
+    this._mouseIsDown = false;
+
+    if (e.target === this._clickedCell) {
+      this._openCell(this._clickedCell);
+    } else {
+      this.setClass(this._clickedCell, "miner-field-cell", "cell-closed");
+    }
   }
 
+  //Методы геймплея
+  _openCell(cell) {
+    this.setClass(cell, "miner-field-cell", cell.dataset.content);
+    cell.dataset.opened = "yes";
+
+    if (cell.dataset.content === "cell-0") this._openNearCells(cell);
+    if (cell.dataset.content === "cell-b") this._gameOver(cell);
+  }
+
+  _openNearCells(cell) {
+
+    let callback = function(currentCell) {
+      //if (currentCell.classList.contains("cell-f")) return;
+      this._openCell(currentCell);
+    };
+
+    this._iterateCellsAround(cell, callback.bind(this));
+  }
+
+  _gameOver(cell) {
+    let bombCells = this._el.querySelectorAll("[data-content='cell-b']");
+    for (let bombCell of bombCells) {
+      if (bombCell.classList.contains("cell-f")) continue;
+      this.setClass(bombCell, "miner-field-cell", "cell-b");
+    }
+
+    this.setClass(cell, "miner-field-cell", "cell-b-boom");
+
+    this._el.removeEventListener('mousedown', this._onCellMouseDown );
+    document.removeEventListener('mouseup', this._onCellMouseUp );
+    this._el.removeEventListener('mouseover', this._onCellMouseOver );
+    this._el.removeEventListener('mouseout', this._onCellMouseOut );
+  }
+
+  _iterateCellsAround(cell, callback) {
+    let rowIndex = Number(cell.dataset.coords.split(':')[0]);
+    let cellIndex = Number(cell.dataset.coords.split(':')[1]);
+
+    for (let i = rowIndex - 1; i <= rowIndex + 1; i++) {
+      for (let j = cellIndex - 1; j <= cellIndex + 1; j++) {
+        if ((i < 0) ||
+            (j < 0) ||
+            (i >= this._height) ||
+            (j >= this._width)) continue;
+        if (i === rowIndex && j === cellIndex) continue;
+
+        let currentCell = this._el.querySelector(`[data-coords="${i}:${j}"]`);
+        if (currentCell.dataset.opened === "yes") continue;
+        callback(currentCell);
+      }
+    }
+  }
+
+  //Методы, необходимые для создания поля
   _render() {
     this._prepareFieldArray();
     this._el.innerHTML = this._compiledTemplate({
       field: this._fieldArray
     });
+
+    this._el.addEventListener('mousedown', this._onCellMouseDown );
+    document.addEventListener('mouseup', this._onCellMouseUp );
+    this._el.addEventListener('mouseover', this._onCellMouseOver );
+    this._el.addEventListener('mouseout', this._onCellMouseOut );
   }
 
   _prepareFieldArray() {
@@ -509,7 +598,7 @@ class MinerField {
     for (let i = 0; i < this._height; i++) {
       this._fieldArray[i] = [];
       for (let j = 0; j < this._width; j++) {
-        this._fieldArray[i][j] = {'value': 0};
+        this._fieldArray[i][j] = {'value': 0, 'coords': `${i}:${j}`};
       }
     }
 
@@ -574,6 +663,23 @@ class MinerField {
 
 /***/ }),
 /* 7 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+
+
+class VisualComponent {
+  setClass(elem, basicCls, addCls) {
+    elem.className = basicCls;
+    elem.classList.add(addCls);
+  }
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = VisualComponent;
+
+
+
+/***/ }),
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var Handlebars = __webpack_require__(2);
@@ -585,10 +691,12 @@ module.exports = (Handlebars["default"] || Handlebars).template({"1":function(co
     + ((stack1 = helpers.each.call(depth0 != null ? depth0 : (container.nullContext || {}),blockParams[0][0],{"name":"each","hash":{},"fn":container.program(2, data, 1, blockParams),"inverse":container.noop,"data":data,"blockParams":blockParams})) != null ? stack1 : "")
     + "</ul>\r\n";
 },"2":function(container,depth0,helpers,partials,data) {
-    var helper;
+    var helper, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=helpers.helperMissing, alias3="function", alias4=container.escapeExpression;
 
   return "  <li class=\"miner-field-cell cell-closed\" data-content=\"cell-"
-    + container.escapeExpression(((helper = (helper = helpers.value || (depth0 != null ? depth0.value : depth0)) != null ? helper : helpers.helperMissing),(typeof helper === "function" ? helper.call(depth0 != null ? depth0 : (container.nullContext || {}),{"name":"value","hash":{},"data":data}) : helper)))
+    + alias4(((helper = (helper = helpers.value || (depth0 != null ? depth0.value : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"value","hash":{},"data":data}) : helper)))
+    + "\" data-coords=\""
+    + alias4(((helper = (helper = helpers.coords || (depth0 != null ? depth0.coords : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"coords","hash":{},"data":data}) : helper)))
     + "\"></li>\r\n";
 },"compiler":[7,">= 4.0.0"],"main":function(container,depth0,helpers,partials,data,blockParams) {
     var stack1;
@@ -597,7 +705,7 @@ module.exports = (Handlebars["default"] || Handlebars).template({"1":function(co
 },"useData":true,"useBlockParams":true});
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -619,7 +727,7 @@ var base = _interopRequireWildcard(_handlebarsBase);
 // Each of these augment the Handlebars object. No need to setup here.
 // (This is done to easily share code between commonjs and browse envs)
 
-var _handlebarsSafeString = __webpack_require__(20);
+var _handlebarsSafeString = __webpack_require__(21);
 
 var _handlebarsSafeString2 = _interopRequireDefault(_handlebarsSafeString);
 
@@ -631,11 +739,11 @@ var _handlebarsUtils = __webpack_require__(0);
 
 var Utils = _interopRequireWildcard(_handlebarsUtils);
 
-var _handlebarsRuntime = __webpack_require__(21);
+var _handlebarsRuntime = __webpack_require__(22);
 
 var runtime = _interopRequireWildcard(_handlebarsRuntime);
 
-var _handlebarsNoConflict = __webpack_require__(22);
+var _handlebarsNoConflict = __webpack_require__(23);
 
 var _handlebarsNoConflict2 = _interopRequireDefault(_handlebarsNoConflict);
 
@@ -670,7 +778,7 @@ module.exports = exports['default'];
 
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -682,31 +790,31 @@ exports.registerDefaultHelpers = registerDefaultHelpers;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _helpersBlockHelperMissing = __webpack_require__(10);
+var _helpersBlockHelperMissing = __webpack_require__(11);
 
 var _helpersBlockHelperMissing2 = _interopRequireDefault(_helpersBlockHelperMissing);
 
-var _helpersEach = __webpack_require__(11);
+var _helpersEach = __webpack_require__(12);
 
 var _helpersEach2 = _interopRequireDefault(_helpersEach);
 
-var _helpersHelperMissing = __webpack_require__(12);
+var _helpersHelperMissing = __webpack_require__(13);
 
 var _helpersHelperMissing2 = _interopRequireDefault(_helpersHelperMissing);
 
-var _helpersIf = __webpack_require__(13);
+var _helpersIf = __webpack_require__(14);
 
 var _helpersIf2 = _interopRequireDefault(_helpersIf);
 
-var _helpersLog = __webpack_require__(14);
+var _helpersLog = __webpack_require__(15);
 
 var _helpersLog2 = _interopRequireDefault(_helpersLog);
 
-var _helpersLookup = __webpack_require__(15);
+var _helpersLookup = __webpack_require__(16);
 
 var _helpersLookup2 = _interopRequireDefault(_helpersLookup);
 
-var _helpersWith = __webpack_require__(16);
+var _helpersWith = __webpack_require__(17);
 
 var _helpersWith2 = _interopRequireDefault(_helpersWith);
 
@@ -723,7 +831,7 @@ function registerDefaultHelpers(instance) {
 
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -769,7 +877,7 @@ module.exports = exports['default'];
 
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -870,7 +978,7 @@ module.exports = exports['default'];
 
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -902,7 +1010,7 @@ module.exports = exports['default'];
 
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -938,7 +1046,7 @@ module.exports = exports['default'];
 
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -971,7 +1079,7 @@ module.exports = exports['default'];
 
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -990,7 +1098,7 @@ module.exports = exports['default'];
 
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1030,7 +1138,7 @@ module.exports = exports['default'];
 
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1042,7 +1150,7 @@ exports.registerDefaultDecorators = registerDefaultDecorators;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _decoratorsInline = __webpack_require__(18);
+var _decoratorsInline = __webpack_require__(19);
 
 var _decoratorsInline2 = _interopRequireDefault(_decoratorsInline);
 
@@ -1053,7 +1161,7 @@ function registerDefaultDecorators(instance) {
 
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1089,7 +1197,7 @@ module.exports = exports['default'];
 
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1143,7 +1251,7 @@ module.exports = exports['default'];
 
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1165,7 +1273,7 @@ module.exports = exports['default'];
 
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1479,7 +1587,7 @@ function executeDecorators(fn, prog, container, depths, data, blockParams) {
 
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1504,10 +1612,10 @@ exports['default'] = function (Handlebars) {
 module.exports = exports['default'];
 //# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi4uLy4uLy4uL2xpYi9oYW5kbGViYXJzL25vLWNvbmZsaWN0LmpzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7Ozs7O3FCQUNlLFVBQVMsVUFBVSxFQUFFOztBQUVsQyxNQUFJLElBQUksR0FBRyxPQUFPLE1BQU0sS0FBSyxXQUFXLEdBQUcsTUFBTSxHQUFHLE1BQU07TUFDdEQsV0FBVyxHQUFHLElBQUksQ0FBQyxVQUFVLENBQUM7O0FBRWxDLFlBQVUsQ0FBQyxVQUFVLEdBQUcsWUFBVztBQUNqQyxRQUFJLElBQUksQ0FBQyxVQUFVLEtBQUssVUFBVSxFQUFFO0FBQ2xDLFVBQUksQ0FBQyxVQUFVLEdBQUcsV0FBVyxDQUFDO0tBQy9CO0FBQ0QsV0FBTyxVQUFVLENBQUM7R0FDbkIsQ0FBQztDQUNIIiwiZmlsZSI6Im5vLWNvbmZsaWN0LmpzIiwic291cmNlc0NvbnRlbnQiOlsiLyogZ2xvYmFsIHdpbmRvdyAqL1xuZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24oSGFuZGxlYmFycykge1xuICAvKiBpc3RhbmJ1bCBpZ25vcmUgbmV4dCAqL1xuICBsZXQgcm9vdCA9IHR5cGVvZiBnbG9iYWwgIT09ICd1bmRlZmluZWQnID8gZ2xvYmFsIDogd2luZG93LFxuICAgICAgJEhhbmRsZWJhcnMgPSByb290LkhhbmRsZWJhcnM7XG4gIC8qIGlzdGFuYnVsIGlnbm9yZSBuZXh0ICovXG4gIEhhbmRsZWJhcnMubm9Db25mbGljdCA9IGZ1bmN0aW9uKCkge1xuICAgIGlmIChyb290LkhhbmRsZWJhcnMgPT09IEhhbmRsZWJhcnMpIHtcbiAgICAgIHJvb3QuSGFuZGxlYmFycyA9ICRIYW5kbGViYXJzO1xuICAgIH1cbiAgICByZXR1cm4gSGFuZGxlYmFycztcbiAgfTtcbn1cbiJdfQ==
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(23)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(24)))
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports) {
 
 var g;
@@ -1534,7 +1642,7 @@ module.exports = g;
 
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var Handlebars = __webpack_require__(2);
