@@ -17,6 +17,7 @@ export default class MinerField extends VisualComponent {
     this._onCellMouseUp = this._onCellMouseUp.bind(this);
     this._onCellMouseOver = this._onCellMouseOver.bind(this);
     this._onCellMouseOut = this._onCellMouseOut.bind(this);
+    this._onContextMenu = this._onContextMenu.bind(this);
     this._render = this._render.bind(this);
 
     this._render();
@@ -27,10 +28,12 @@ export default class MinerField extends VisualComponent {
   //Визуальные решения
   _onCellMouseDown(e) {
     e.preventDefault();
+    if (e.button !== 0) return;
 
     this._mouseIsDown = true;
     this._clickedCell = e.target;
     if (!this._clickedCell.classList.contains("miner-field-cell")) return;
+    if (!this._clickedCell.classList.contains("cell-closed")) return;
 
     this.setClass(this._clickedCell, "miner-field-cell", "cell-0");
   }
@@ -75,26 +78,26 @@ export default class MinerField extends VisualComponent {
   _openNearCells(cell) {
 
     let callback = function(currentCell) {
-      //if (currentCell.classList.contains("cell-f")) return;
+      if (currentCell.classList.contains("cell-f")) return;
       this._openCell(currentCell);
     };
 
     this._iterateCellsAround(cell, callback.bind(this));
   }
 
-  _gameOver(cell) {
-    let bombCells = this._el.querySelectorAll("[data-content='cell-b']");
-    for (let bombCell of bombCells) {
-      if (bombCell.classList.contains("cell-f")) continue;
-      this.setClass(bombCell, "miner-field-cell", "cell-b");
+  _onContextMenu(e) {
+    e.preventDefault();
+    let cell = e.target.closest(".miner-field-cell");
+    if (!cell || cell.dataset.opened === "yes") return;
+    this._setFlag(cell);
+  }
+
+  _setFlag(cell) {
+    if (cell.classList.contains("cell-flag")) {
+      this.setClass(cell, "miner-field-cell", "cell-closed");
+    } else {
+      this.setClass(cell, "miner-field-cell", "cell-flag");
     }
-
-    this.setClass(cell, "miner-field-cell", "cell-b-boom");
-
-    this._el.removeEventListener('mousedown', this._onCellMouseDown );
-    document.removeEventListener('mouseup', this._onCellMouseUp );
-    this._el.removeEventListener('mouseover', this._onCellMouseOver );
-    this._el.removeEventListener('mouseout', this._onCellMouseOut );
   }
 
   _iterateCellsAround(cell, callback) {
@@ -116,7 +119,23 @@ export default class MinerField extends VisualComponent {
     }
   }
 
-  //Методы, необходимые для создания поля
+  _gameOver(cell) {
+    let bombCells = this._el.querySelectorAll("[data-content='cell-b']");
+    for (let bombCell of bombCells) {
+      if (bombCell.classList.contains("cell-f")) continue;
+      this.setClass(bombCell, "miner-field-cell", "cell-b");
+    }
+
+    this.setClass(cell, "miner-field-cell", "cell-b-boom");
+
+    this._el.removeEventListener('mousedown', this._onCellMouseDown );
+    document.removeEventListener('mouseup', this._onCellMouseUp );
+    this._el.removeEventListener('mouseover', this._onCellMouseOver );
+    this._el.removeEventListener('mouseout', this._onCellMouseOut );
+    this._el.removeEventListener('contextmenu', this._onContextMenu);
+  }
+
+    //Методы, необходимые для создания поля
   _render() {
     this._prepareFieldArray();
     this._el.innerHTML = this._compiledTemplate({
@@ -127,6 +146,7 @@ export default class MinerField extends VisualComponent {
     document.addEventListener('mouseup', this._onCellMouseUp );
     this._el.addEventListener('mouseover', this._onCellMouseOver );
     this._el.addEventListener('mouseout', this._onCellMouseOut );
+    this._el.addEventListener('contextmenu', this._onContextMenu);
   }
 
   _prepareFieldArray() {
