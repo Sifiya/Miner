@@ -425,6 +425,10 @@ let miner = new __WEBPACK_IMPORTED_MODULE_0__miner_miner__["a" /* default */]({
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__component_component__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__miner_field_miner_field__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__miner_counter_miner_counter__ = __webpack_require__(25);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__miner_timer_miner_timer__ = __webpack_require__(26);
+
+
 
 
 
@@ -435,7 +439,7 @@ class MinerGame extends __WEBPACK_IMPORTED_MODULE_0__component_component__["a" /
     super();
     this._el = options.el;
 
-    this._compiledTemplate = __webpack_require__(25);
+    this._compiledTemplate = __webpack_require__(27);
 
     this._render();
 
@@ -446,11 +450,22 @@ class MinerGame extends __WEBPACK_IMPORTED_MODULE_0__component_component__["a" /
       bombs: options.bombs
     });
 
+    this._counter = new __WEBPACK_IMPORTED_MODULE_2__miner_counter_miner_counter__["a" /* default */]({
+      el: this._el.querySelector(".miner-head-counter"),
+      bombs: options.bombs
+    });
+
+    this._minerTimer = new __WEBPACK_IMPORTED_MODULE_3__miner_timer_miner_timer__["a" /* default */]({
+      el: this._el.querySelector(".miner-head-timer")
+    });
+
     this._smileButton = this._el.querySelector(".miner-head-smile");
 
     this._smileButton.addEventListener('click', this._initiateCreatingNewField.bind(this) );
     this._el.addEventListener('cellMouseDown', this._smileSetWowFace.bind(this) );
     this._el.addEventListener('cellMouseUp', this._smileRemoveWowFace.bind(this) );
+    this._el.addEventListener('gameover', this._smileSetDeadFace.bind(this) );
+    this._el.addEventListener('gamewin', this._smileSetWinnerFace.bind(this) );
 
     this._smileButton.addEventListener('mousedown', this._smileButtonMouseDown.bind(this));
     document.addEventListener('mouseup', this._smileButtonMouseUp.bind(this));
@@ -486,6 +501,14 @@ class MinerGame extends __WEBPACK_IMPORTED_MODULE_0__component_component__["a" /
   _smileRemoveWowFace() {
     this._smileButton.className = "miner-head-smile";
   }
+
+  _smileSetDeadFace() {
+    this._smileButton.classList.add("dead");
+  }
+
+  _smileSetWinnerFace() {
+    this._smileButton.classList.add("winner");
+  }
 }
 /* harmony export (immutable) */ __webpack_exports__["a"] = MinerGame;
 
@@ -512,94 +535,157 @@ class MinerField extends __WEBPACK_IMPORTED_MODULE_0__component_component__["a" 
 
     this._compiledTemplate =  __webpack_require__(8);
 
-    this._onCellMouseDown = this._onCellMouseDown.bind(this);
-    this._onCellMouseUp = this._onCellMouseUp.bind(this);
-    this._onCellMouseOver = this._onCellMouseOver.bind(this);
-    this._onCellMouseOut = this._onCellMouseOut.bind(this);
-    this._onContextMenu = this._onContextMenu.bind(this);
-    this._render = this._render.bind(this);
+    this._bindAllListenerFunctions();
 
     this._render();
 
     document.addEventListener('refreshField', this._render);
   }
 
-  //Визуальные решения
+  //Методы, реагирующие на действия пользователя
   _onCellMouseDown(e) {
     e.preventDefault();
-    if (e.button !== 0) return;
+    let cell = e.target.closest(".miner-field-cell");
+    if (!cell) return;
 
-    this._mouseIsDown = true;
+    if (e.button === 2) {
+      if (this._clickType) return;
+      if (cell.dataset.opened === "yes") return;
+      this._setFlag(cell);
+      return;
+    }
+
+    this._clickType = 1;
     this.trigger('cellMouseDown', true);
 
-    this._clickedCell = e.target;
-    if (!this._clickedCell.classList.contains("miner-field-cell")) return;
-    if (!this._clickedCell.classList.contains("cell-closed")) return;
+    if (cell.dataset.opened === "yes") return;
+    if (cell.classList.contains("cell-flag")) return;
 
-    this.setClass(this._clickedCell, "miner-field-cell", "cell-0");
-  }
-
-  _onCellMouseOver(e) {
-    this._clickedCell = e.target;
-    if (!this._clickedCell.classList.contains("miner-field-cell")) return;
-    if (!this._mouseIsDown) return;
-
-    this.setClass(this._clickedCell, "miner-field-cell", "cell-0");
+    this.setClass(cell, "miner-field-cell", "cell-0");
   }
 
   _onCellMouseOut(e) {
-    let cell = e.target;
-    if (!cell.classList.contains("miner-field-cell")) return;
-    if (!this._mouseIsDown) return;
+    if (!this._clickType) return;
+    let cell = e.target.closest(".miner-field-cell");
+    if (!cell) return;
 
-    this.setClass(cell, "miner-field-cell", "cell-closed");
+    this._unpressCells();
   }
 
-  //Для визуала + открытия ячейки
-  _onCellMouseUp(e) {
-    if (!this._mouseIsDown) return;
-    this._mouseIsDown = false;
-    this.trigger('cellMouseUp', true);
+  _onCellMouseOver(e) {
+    if (!this._clickType) return;
+    let cell = e.target.closest(".miner-field-cell");
+    if (!cell) return;
+    if(cell.classList.contains("cell-flag")) return;
+    if(cell.dataset.opened === "yes") return;
 
-    if (e.target === this._clickedCell) {
-      this._openCell(this._clickedCell);
-    } else {
-      this.setClass(this._clickedCell, "miner-field-cell", "cell-closed");
+    this.setClass(cell, "miner-field-cell", "cell-0");
+  }
+
+  _onCellMouseUp(e) {
+    this.trigger('cellMouseUp', true);
+    if (!this._clickType) return;
+
+    let cell = e.target.closest(".miner-field-cell");
+    if (!cell || cell.classList.contains("cell-flag")) {
+      this._clickType = 0;
+      this._unpressCells();
+      return;
+    }
+
+    if (this._clickType === 1) {
+      this._openCell(cell);
+    } else if (this._clickType === 2) {
+
+      if (cell.dataset.opened === "yes") {
+        let bombsAmount = Number(cell.dataset.content.slice(5));
+        if (bombsAmount === this._countFlagsAround(cell)) {
+          this._openNearCells(cell);
+        }
+      }
+
+    }
+
+    this._clickType = 0;
+    this._unpressCells();
+  }
+
+  _onContextMenu(e) {
+    e.preventDefault();
+  }
+
+  _onBothMBClicked(e) {
+    if (e.buttons !== 3) return;
+    let cell = e.target.closest(".miner-field-cell");
+    if (!cell) return;
+
+    this._clickType = 2;
+
+    this._pressCellsAround(cell);
+  }
+
+  //Методы для корректного визуального отображения пользовательских взаимодействий
+  _pressCellsAround(cell) {
+    let callback = function(currentCell) {
+      if (currentCell.classList.contains("cell-flag")) return;
+      this.setClass(currentCell, "miner-field-cell", "cell-0");
+    };
+    this._iterateCellsAround(cell, callback.bind(this));
+  }
+
+  _unpressCells() {
+    let pressedCells = this._el.querySelectorAll('.cell-0:not([data-opened])');
+    for (let cell of pressedCells) {
+      this.setClass(cell, "miner-field-cell", "cell-closed");
     }
   }
 
   //Методы геймплея
   _openCell(cell) {
+    this.trigger('cellopened', true);
     this.setClass(cell, "miner-field-cell", cell.dataset.content);
-    cell.dataset.opened = "yes";
+    if (cell.dataset.content === "cell-b") {
+      this._gameOver(cell);
+      return;
+    }
 
+    cell.dataset.opened = "yes";
     if (cell.dataset.content === "cell-0") this._openNearCells(cell);
-    if (cell.dataset.content === "cell-b") this._gameOver(cell);
+
+    let openedCells = this._el.querySelectorAll('[data-opened]').length;
+    if ( openedCells === ((this._width * this._height) - this._bombs) ) {
+      this.trigger('gamewin', true);
+    }
   }
 
   _openNearCells(cell) {
 
     let callback = function(currentCell) {
-      if (currentCell.classList.contains("cell-f")) return;
+      if (currentCell.classList.contains("cell-flag")) return;
       this._openCell(currentCell);
     };
 
     this._iterateCellsAround(cell, callback.bind(this));
   }
 
-  _onContextMenu(e) {
-    e.preventDefault();
-    let cell = e.target.closest(".miner-field-cell");
-    if (!cell || cell.dataset.opened === "yes") return;
-    this._setFlag(cell);
-  }
-
   _setFlag(cell) {
     if (cell.classList.contains("cell-flag")) {
       this.setClass(cell, "miner-field-cell", "cell-closed");
+      this.trigger('flagremoved', true);
     } else {
       this.setClass(cell, "miner-field-cell", "cell-flag");
+      this.trigger('flagsetted', true);
     }
+  }
+
+  _countFlagsAround(cell) {
+    let flags = 0;
+
+    this._iterateCellsAround(cell, (currentCell) => {
+      if (currentCell.classList.contains("cell-flag")) flags++;
+    });
+
+    return flags;
   }
 
   _iterateCellsAround(cell, callback) {
@@ -624,7 +710,7 @@ class MinerField extends __WEBPACK_IMPORTED_MODULE_0__component_component__["a" 
   _gameOver(cell) {
     let bombCells = this._el.querySelectorAll("[data-content='cell-b']");
     for (let bombCell of bombCells) {
-      if (bombCell.classList.contains("cell-f")) continue;
+      if (bombCell.classList.contains("cell-flag")) continue;
       this.setClass(bombCell, "miner-field-cell", "cell-b");
     }
 
@@ -635,9 +721,27 @@ class MinerField extends __WEBPACK_IMPORTED_MODULE_0__component_component__["a" 
     this._el.removeEventListener('mouseover', this._onCellMouseOver );
     this._el.removeEventListener('mouseout', this._onCellMouseOut );
     this._el.removeEventListener('contextmenu', this._onContextMenu);
+    this._el.removeEventListener('mousedown', this._onBothMBClicked );
+    this._el.removeEventListener('mouseover', this._onBothMBClicked );
+
+    this.trigger('gameover', true);
   }
 
-    //Методы, необходимые для создания поля
+  _gameWin() {
+    this.trigger('gamewin', true);
+  }
+
+  //Методы, необходимые для создания поля
+  _bindAllListenerFunctions() {
+    this._onCellMouseDown = this._onCellMouseDown.bind(this);
+    this._onCellMouseUp = this._onCellMouseUp.bind(this);
+    this._onCellMouseOver = this._onCellMouseOver.bind(this);
+    this._onCellMouseOut = this._onCellMouseOut.bind(this);
+    this._onContextMenu = this._onContextMenu.bind(this);
+    this._onBothMBClicked = this._onBothMBClicked.bind(this);
+    this._render = this._render.bind(this);
+  }
+
   _render() {
     this._prepareFieldArray();
     this._el.innerHTML = this._compiledTemplate({
@@ -649,6 +753,8 @@ class MinerField extends __WEBPACK_IMPORTED_MODULE_0__component_component__["a" 
     this._el.addEventListener('mouseover', this._onCellMouseOver );
     this._el.addEventListener('mouseout', this._onCellMouseOut );
     this._el.addEventListener('contextmenu', this._onContextMenu);
+    this._el.addEventListener('mousedown', this._onBothMBClicked );
+    this._el.addEventListener('mouseover', this._onBothMBClicked );
   }
 
   _prepareFieldArray() {
@@ -1684,6 +1790,123 @@ module.exports = g;
 
 /***/ }),
 /* 25 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__component_component__ = __webpack_require__(2);
+
+
+
+
+class MinerCounter extends __WEBPACK_IMPORTED_MODULE_0__component_component__["a" /* default */] {
+  constructor(options) {
+    super();
+
+    this._el = options.el;
+    this._currentBombs = this._totalBombs = options.bombs;
+    
+    this._updateCounter();
+
+    document.addEventListener('flagsetted', this._reduceCounter.bind(this));
+    document.addEventListener('flagremoved', this._increaseCounter.bind(this));
+    document.addEventListener('refreshField', this._restartCounter.bind(this));
+  }
+
+  _updateCounter() {
+    if ((this._currentBombs / 1000) >= 1) return;
+    let nums = "000" + (String(this._currentBombs));
+    nums = nums.slice(-3);
+    let outputs = this._el.querySelectorAll(".miner-head-counter-num");
+
+    for (let i = 0; i < 3; i++) {
+      this.setClass(outputs[i], "miner-head-counter-num", `num-${nums[i]}`);
+    }
+  }
+
+  _reduceCounter() {
+    this._currentBombs--;
+    this._currentBombs = Math.max(this._currentBombs, 0);
+    this._updateCounter();
+  }
+
+  _increaseCounter() {
+    this._currentBombs++;
+    this._currentBombs = Math.min(this._currentBombs, this._totalBombs);
+    this._updateCounter();
+  }
+
+  _restartCounter() {
+    this._currentBombs = this._totalBombs;
+    this._updateCounter();
+  }
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = MinerCounter;
+
+
+
+/***/ }),
+/* 26 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__component_component__ = __webpack_require__(2);
+
+
+
+
+class MinerTimer extends __WEBPACK_IMPORTED_MODULE_0__component_component__["a" /* default */] {
+  constructor(options) {
+    super();
+
+    this._el = options.el;
+
+    this._timerCount = 0;
+    this._updateTimer();
+
+    document.addEventListener('refreshField', this._restartTimer.bind(this) );
+    document.addEventListener('gameover', this._stop.bind(this) );
+    document.addEventListener('cellopened', this._start.bind(this) );
+  }
+
+  _start() {
+    if (this._timerId) return;
+    this._timerId = setInterval(this._tick.bind(this), 1000);
+  }
+
+  _stop() {
+    clearInterval(this._timerId);
+    this._timerId = null;
+  }
+
+  _tick() {
+    this._timerCount++;
+    this._updateTimer();
+    if (this._timerCount === 999) this._stop();
+  }
+
+  _updateTimer() {
+    let timerStr = "000" + String(this._timerCount);
+    timerStr = timerStr.slice(-3);
+    let outputs = this._el.querySelectorAll(".miner-head-timer-num");
+
+    for (let i = 0; i < 3; i++) {
+      this.setClass(outputs[i], "miner-head-timer-num", `num-${timerStr[i]}`);
+    }
+  }
+
+  _restartTimer() {
+    this._stop();
+    this._timerCount = 0;
+    this._updateTimer();
+  }
+
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = MinerTimer;
+
+
+
+/***/ }),
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var Handlebars = __webpack_require__(3);

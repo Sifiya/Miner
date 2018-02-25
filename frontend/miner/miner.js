@@ -2,6 +2,8 @@
 
 import Component from '../component/component';
 import MinerField from '../miner-field/miner-field';
+import MinerCounter from '../miner-counter/miner-counter';
+import MinerTimer from '../miner-timer/miner-timer';
 
 export default class MinerGame extends Component {
   constructor(options) {
@@ -19,11 +21,22 @@ export default class MinerGame extends Component {
       bombs: options.bombs
     });
 
+    this._counter = new MinerCounter({
+      el: this._el.querySelector(".miner-head-counter"),
+      bombs: options.bombs
+    });
+
+    this._minerTimer = new MinerTimer({
+      el: this._el.querySelector(".miner-head-timer")
+    });
+
     this._smileButton = this._el.querySelector(".miner-head-smile");
 
     this._smileButton.addEventListener('click', this._initiateCreatingNewField.bind(this) );
     this._el.addEventListener('cellMouseDown', this._smileSetWowFace.bind(this) );
     this._el.addEventListener('cellMouseUp', this._smileRemoveWowFace.bind(this) );
+    this._el.addEventListener('gameover', this._smileSetDeadFace.bind(this) );
+    this._el.addEventListener('gamewin', this._smileSetWinnerFace.bind(this) );
 
     this._smileButton.addEventListener('mousedown', this._smileButtonMouseDown.bind(this));
     document.addEventListener('mouseup', this._smileButtonMouseUp.bind(this));
@@ -58,5 +71,13 @@ export default class MinerGame extends Component {
 
   _smileRemoveWowFace() {
     this._smileButton.className = "miner-head-smile";
+  }
+
+  _smileSetDeadFace() {
+    this._smileButton.classList.add("dead");
+  }
+
+  _smileSetWinnerFace() {
+    this._smileButton.classList.add("winner");
   }
 }
