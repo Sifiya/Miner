@@ -131,7 +131,7 @@ export default class MinerField extends Component {
     if (cell.dataset.content === "cell-0") this._openNearCells(cell);
 
     let openedCells = this._el.querySelectorAll('[data-opened]').length;
-    if ( openedCells === ((this._width * this._height) - this._bombs) ) {
+    if ( openedCells == ((this._width * this._height) - this._bombs) ) {
       this.trigger('gamewin', true);
     }
   }
@@ -203,10 +203,6 @@ export default class MinerField extends Component {
     this._el.removeEventListener('mouseover', this._onBothMBClicked );
 
     this.trigger('gameover', true);
-  }
-
-  _gameWin() {
-    this.trigger('gamewin', true);
   }
 
   //Методы, необходимые для создания поля
