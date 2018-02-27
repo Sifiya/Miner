@@ -192,6 +192,11 @@ export default class MinerField extends Component {
       this.setClass(bombCell, "miner-field-cell", "cell-b");
     }
 
+    let wrongFlags = this._el.querySelectorAll(".cell-flag:not([data-content='cell-b'])");
+    for (let wrongFlag of wrongFlags) {
+      this.setClass(wrongFlag, "miner-field-cell", "cell-b-wrong");
+    }
+
     this.setClass(cell, "miner-field-cell", "cell-b-boom");
 
     this._el.removeEventListener('mousedown', this._onCellMouseDown );
