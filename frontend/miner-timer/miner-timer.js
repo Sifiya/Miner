@@ -13,6 +13,7 @@ export default class MinerTimer extends Component {
 
     document.addEventListener('refreshField', this._restartTimer.bind(this) );
     document.addEventListener('gameover', this._stop.bind(this) );
+    document.addEventListener('gamewin', this._stop.bind(this) );
     document.addEventListener('cellopened', this._start.bind(this) );
   }
 
