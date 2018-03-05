@@ -132,7 +132,7 @@ export default class MinerField extends Component {
 
     let openedCells = this._el.querySelectorAll('[data-opened]').length;
     if ( openedCells == ((this._width * this._height) - this._bombs) ) {
-      this.trigger('gamewin', true);
+      this._gameWin();
     }
   }
 
@@ -208,6 +208,18 @@ export default class MinerField extends Component {
     this._el.removeEventListener('mouseover', this._onBothMBClicked );
 
     this.trigger('gameover', true);
+  }
+
+  _gameWin() {
+    this._el.removeEventListener('mousedown', this._onCellMouseDown );
+    document.removeEventListener('mouseup', this._onCellMouseUp );
+    this._el.removeEventListener('mouseover', this._onCellMouseOver );
+    this._el.removeEventListener('mouseout', this._onCellMouseOut );
+    this._el.removeEventListener('contextmenu', this._onContextMenu);
+    this._el.removeEventListener('mousedown', this._onBothMBClicked );
+    this._el.removeEventListener('mouseover', this._onBothMBClicked );
+
+    this.trigger('gamewin', true);
   }
 
   //Методы, необходимые для создания поля

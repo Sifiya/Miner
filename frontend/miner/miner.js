@@ -33,9 +33,10 @@ export default class MinerGame extends Component {
     this._smileButton = this._el.querySelector(".miner-head-smile");
 
     this._smileRemoveWowFace = this._smileRemoveWowFace.bind(this);
+    this._smileSetWowFace = this._smileSetWowFace.bind(this);
 
     this._smileButton.addEventListener('click', this._initiateCreatingNewField.bind(this) );
-    this._el.addEventListener('cellMouseDown', this._smileSetWowFace.bind(this) );
+    this._el.addEventListener('cellMouseDown', this._smileSetWowFace );
     this._el.addEventListener('cellMouseUp', this._smileRemoveWowFace );
     this._el.addEventListener('gameover', this._smileSetDeadFace.bind(this) );
     this._el.addEventListener('gamewin', this._smileSetWinnerFace.bind(this) );
@@ -66,6 +67,7 @@ export default class MinerGame extends Component {
   _initiateCreatingNewField() {
     this.trigger('refreshField', true);
     this._el.addEventListener('cellMouseUp', this._smileRemoveWowFace );
+    this._el.addEventListener('cellMouseDown', this._smileSetWowFace );
   }
 
   _smileSetWowFace() {
@@ -83,5 +85,6 @@ export default class MinerGame extends Component {
   _smileSetWinnerFace() {
     this._smileButton.classList.add("winner");
     this._el.removeEventListener('cellMouseUp', this._smileRemoveWowFace );
+    this._el.removeEventListener('cellMouseDown', this._smileSetWowFace );
   }
 }
